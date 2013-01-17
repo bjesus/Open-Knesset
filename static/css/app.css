@@ -6110,3 +6110,6 @@ ol {
 .video_playlist_player_embed {
   margin-bottom: 10px;
 }
+.vote_input {
+  width: 580px;
+}

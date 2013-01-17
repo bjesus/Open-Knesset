@@ -304,7 +304,7 @@
                         {% trans 'Suggest a matching vote' %}
                         <form method="post" action=".">{% csrf_token %}
                             <input type="hidden" name="user_input_type" value="pre vote"></input>
-                            <input type="text" class="vote_input" name="vote_string"></input>
+                            <input type="text" class="vote_input" name="vote_string" placeholder="{% trans 'Start typing a bill title and choose one from the list' %}"></input>
                             <input type="hidden" name="vote_id"></input>
                             <input type="submit" disabled value="{% trans 'Submit' %}"></input>
                         </form>
@@ -363,7 +363,7 @@
                         <form method="post" action=".">
                             {% csrf_token %}
                             <input type="hidden" name="user_input_type" value="first vote"></input>
-                            <input type="text" class="vote_input" name="vote_string"></input>
+                            <input type="text" class="vote_input" name="vote_string" placeholder="{% trans 'Start typing a bill title and choose one from the list' %}"></input>
                             <input type="hidden" name="vote_id"></input>
                             <input type="submit" disabled value="{% trans 'Submit' %}"></input>
                         </form>
@@ -422,7 +422,7 @@
                         {% trans 'Suggest a matching vote' %}
                         <form method="post" action=".">{% csrf_token %}
                             <input type="hidden" name="user_input_type" value="approval vote"></input>
-                            <input type="text" class="vote_input" name="vote_string"></input>
+                            <input type="text" class="vote_input" name="vote_string" placeholder="{% trans 'Start typing a bill title and choose one from the list' %}"></input>
                             <input type="hidden" name="vote_id"></input>
                             <input type="submit" disabled value="{% trans 'Submit' %}"></input>
                         </form>
