@@ -1,7 +1,15 @@
+from django.core.urlresolvers import reverse
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from django.core.exceptions import ValidationError
 from django.forms.fields import IntegerField
+
+from managers import PersonManager
+
+GENDER_CHOICES = (
+    (u'M', _('Male')),
+    (u'F', _('Female')),
+)
 
 class Title(models.Model):
     name = models.CharField(max_length=64)
@@ -11,7 +19,7 @@ class Title(models.Model):
 
 class PersonAlias(models.Model):
     name = models.CharField(max_length=64)
-    person = models.ForeignKey('Person')
+    person = models.ForeignKey('Person', related_name='aliases')
 
     def __unicode__(self):
         return "%s -> %s" % (self.name, self.person.name)
@@ -25,6 +33,7 @@ class Person(models.Model):
     name = models.CharField(max_length=64)
     mk = models.ForeignKey('mks.Member', blank=True, null=True, related_name='person')
     titles = models.ManyToManyField(Title, blank=True, null=True, related_name='persons')
+    # TODO: change to an ImageField
     img_url = models.URLField(blank=True, verify_exists=False)
     phone = models.CharField(blank=True, null=True, max_length=20)
     fax = models.CharField(blank=True, null=True, max_length=20)
@@ -43,6 +52,8 @@ class Person(models.Model):
     residence_economy = models.IntegerField(blank=True, null=True)
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES, blank=True, null=True)
 
+    objects = PersonManager()
+
     def __unicode__(self):
         return self.name
 
@@ -51,9 +62,11 @@ class Person(models.Model):
         verbose_name = _('Person')
         verbose_name_plural = _('Persons')
 
-    @models.permalink
     def get_absolute_url(self):
-        return ('person-detail', [str(self.id)])
+        if self.mk:
+            return self.mk.get_absolute_url()
+        else:
+            return reverse('person-detail', kwargs={'pk':self.id})
 
     def number_of_meetings(self):
         return self.protocol_parts.values('meeting').distinct().count()

@@ -8,7 +8,7 @@ from django import forms
 from django.utils.translation import ugettext_lazy as _
 from django.utils.safestring import mark_safe
 from django.utils.html import escape
-from django.db.models import Count
+from django.db.models import Count, Q
 from django.core.cache import cache
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -36,6 +36,25 @@ VOTE_ACTION_TYPE_CHOICES = (
 
 CONVERT_TO_DISCUSSION_HEADERS = ('להעביר את הנושא'.decode('utf8'), 'העברת הנושא'.decode('utf8'))
 
+class CandidateListVotingStatistics(models.Model):
+    candidates_list = models.OneToOneField('polyorg.CandidateList',related_name='voting_statistics')
+
+    def votes_against_party_count(self):
+        return VoteAction.objects.filter(member__id__in=self.candidates_list.member_ids, against_party=True).count()
+
+    def votes_count(self):
+        return VoteAction.objects.filter(member__id__in=self.candidates_list.member_ids).exclude(type='no-vote').count()
+
+    def votes_per_seat(self):
+        return round(float(self.votes_count()) / len(self.candidates_list.member_ids))
+
+    def discipline(self):
+        total_votes = self.votes_count()
+        if total_votes > 0:
+            votes_against_party = self.votes_against_party_count()
+            return round(100.0*(total_votes-votes_against_party)/total_votes,1)
+        else:
+            return _('N/A')
 
 class PartyVotingStatistics(models.Model):
     party = models.OneToOneField('mks.Party',related_name='voting_statistics')
@@ -451,6 +470,8 @@ class BillManager(models.Manager):
         stage = kwargs.get('stage', None)
         member = kwargs.get('member', None)
         booklet = kwargs.get('booklet', None)
+        changed_after = kwargs.get('changed_after', None)
+        changed_before = kwargs.get('changed_before', None)
 
         filter_kwargs = {}
         if stage and stage != 'all':
@@ -475,8 +496,13 @@ class BillManager(models.Manager):
             if kps:
                 qs = qs.filter(knesset_proposal__in=kps)
 
-        return qs
+        if changed_after:
+            qs = qs.filter(stage_date__gte=changed_after)
 
+        if changed_before:
+            qs = qs.filter(stage_date__lte=changed_before)
+
+        return qs
 
 class Bill(models.Model):
     title = models.CharField(max_length=1000)
